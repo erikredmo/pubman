@@ -21,6 +21,9 @@ pnpm-debug.log*
 .env.*
 !.env.example
 
+# Claude Code
+.claude/
+
 # Editor / OS
 .DS_Store
 .idea/
@@ -41,3 +44,6 @@ pnpm-debug.log*
 package-lock.json
 pnpm-lock.yaml
 yarn.lock
+
+# Database
+database.sql
