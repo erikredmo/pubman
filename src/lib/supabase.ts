@@ -19,6 +19,7 @@ export type DbUser = {
   name: string;
   password: string;
   color: string;
+  img: string;
 };
 
 export type DbRound = {
@@ -36,4 +37,32 @@ export type DbRoundStop = {
   bar_name: string;
   position: number;
   tag: string | null;
+};
+
+export type DbRoundSession = {
+  id: string;
+  round_id: string;
+  round_name: string;
+  code: string;
+  created_by: string;
+  created_at: string;
+  completed: number;
+  checked_in: boolean;
+  custom_stops: unknown;
+};
+
+export type DbSessionParticipant = {
+  id: string;
+  session_id: string;
+  user_name: string;
+  joined_at: string;
+};
+
+export type DbParticipantCheckin = {
+  id: string;
+  session_id: string;
+  user_name: string;
+  completed: number;
+  checked_in: boolean;
+  updated_at: string;
 };

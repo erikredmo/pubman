@@ -1,11 +1,15 @@
 import { useState, useEffect } from "react";
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
-import { TopBar } from "@/components/TopBar";
+import { createFileRoute, redirect, useNavigate } from "@tanstack/react-router";
 import { BottomNav } from "@/components/BottomNav";
 import { Icon } from "@/components/Icon";
 import { supabase, type DbUser } from "@/lib/supabase";
 
 export const Route = createFileRoute("/")({
+  beforeLoad: () => {
+    let hasUser = false;
+    try { hasUser = !!localStorage.getItem("pubman_user"); } catch {}
+    if (hasUser) throw redirect({ to: "/discover" });
+  },
   head: () => ({
     meta: [
       { title: "Pubman — Välj användare" },
@@ -15,14 +19,11 @@ export const Route = createFileRoute("/")({
   component: WelcomePage,
 });
 
-function initials(name: string) {
-  return name.slice(0, 2).toUpperCase();
-}
-
 function WelcomePage() {
   const navigate = useNavigate();
   const [users, setUsers] = useState<DbUser[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [selected, setSelected] = useState<DbUser | null>(null);
   const [pw, setPw] = useState("");
   const [error, setError] = useState(false);
@@ -32,7 +33,8 @@ function WelcomePage() {
       .from("users")
       .select("*")
       .order("name")
-      .then(({ data }) => {
+      .then(({ data, error: err }) => {
+        if (err) { setLoadError(true); setLoading(false); return; }
         setUsers(data ?? []);
         setLoading(false);
       });
@@ -54,6 +56,8 @@ function WelcomePage() {
     e.preventDefault();
     if (!selected) return;
     if (pw === selected.password) {
+      localStorage.setItem("pubman_user", selected.name);
+      localStorage.setItem("pubman_img",  selected.img);
       navigate({ to: "/discover" });
     } else {
       setError(true);
@@ -63,7 +67,6 @@ function WelcomePage() {
 
   return (
     <div className="min-h-screen pb-28 bg-background text-on-background">
-      <TopBar />
       <main className="px-5 pt-6 max-w-sm mx-auto">
 
         {/* Step 1: pick a user */}
@@ -82,6 +85,10 @@ function WelcomePage() {
               <div className="flex justify-center mt-8">
                 <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
               </div>
+            ) : loadError ? (
+              <p className="text-center text-error mt-8 text-sm">
+                Kunde inte ladda användare. Kontrollera din anslutning.
+              </p>
             ) : (
               <div className="grid grid-cols-2 gap-4 mt-4">
                 {users.map((user) => (
@@ -90,11 +97,11 @@ function WelcomePage() {
                     onClick={() => pickUser(user)}
                     className="bg-surface-container-lowest p-6 rounded-2xl soft-glow-shadow border border-outline-variant/30 flex flex-col items-center text-center active:scale-[0.97] transition-all duration-200 hover:border-primary/40"
                   >
-                    <div
-                      className={`w-16 h-16 rounded-full ${user.color} flex items-center justify-center mb-3 text-on-primary text-xl font-bold`}
-                    >
-                      {initials(user.name)}
-                    </div>
+                    <img
+                      src={user.img}
+                      alt={user.name}
+                      className="w-16 h-16 rounded-full object-cover mb-3 border-2 border-primary/20"
+                    />
                     <span className="text-base font-semibold text-on-surface">{user.name}</span>
                   </button>
                 ))}
@@ -107,11 +114,11 @@ function WelcomePage() {
         {selected && (
           <>
             <section className="py-8 text-center">
-              <div
-                className={`w-20 h-20 rounded-full ${selected.color} flex items-center justify-center mx-auto mb-4 text-on-primary text-2xl font-bold`}
-              >
-                {initials(selected.name)}
-              </div>
+              <img
+                src={selected.img}
+                alt={selected.name}
+                className="w-20 h-20 rounded-full object-cover mx-auto mb-4 border-2 border-primary/20"
+              />
               <h1 className="text-3xl font-extrabold tracking-tight text-primary leading-tight mb-1">
                 Hej, {selected.name}!
               </h1>
