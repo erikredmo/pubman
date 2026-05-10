@@ -116,7 +116,7 @@ function BarCard({ bar, selected, onToggle }: { bar: Bar; selected: boolean; onT
 
 function DiscoverPage() {
   const navigate = useNavigate();
-  const userName = localStorage.getItem("pubman_user") ?? "";
+  const [userName] = useState(() => { try { return localStorage.getItem("pubman_user") ?? ""; } catch { return ""; } });
 
   const [mode, setMode] = useState<Mode>("ready");
   const [city, setCity] = useState<City>("Stockholm");
